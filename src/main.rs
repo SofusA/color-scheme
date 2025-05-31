@@ -2,6 +2,7 @@ use std::fs;
 
 use clap::Parser;
 use regex::Regex;
+use serde::{Deserialize, Serialize};
 use walkdir::WalkDir;
 
 #[derive(Parser, Debug)]
@@ -9,6 +10,9 @@ use walkdir::WalkDir;
 struct Args {
     /// Path to find color scheme files
     path: String,
+    /// Path to color scheme json file
+    #[arg(short, long)]
+    scheme: String,
 }
 
 enum ColorType {
@@ -21,23 +25,67 @@ struct ColorSchemeFile {
     color_type: ColorType,
 }
 
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+struct ColorSchemeInput {
+    black: String,
+    light_black: String,
+    dark_gray: String,
+    gray: String,
+    faint_gray: String,
+    light_gray: String,
+    dark_white: String,
+    white: String,
+    red: String,
+    orange: String,
+    yellow: String,
+    green: String,
+    cyan: String,
+    blue: String,
+    purple: String,
+    brown: String,
+}
+
 struct ColorScheme {
-    black: palette::Srgb,
-    light_black: palette::Srgb,
-    dark_gray: palette::Srgb,
-    gray: palette::Srgb,
-    faint_gray: palette::Srgb,
-    light_gray: palette::Srgb,
-    dark_white: palette::Srgb,
-    white: palette::Srgb,
-    red: palette::Srgb,
-    orange: palette::Srgb,
-    yellow: palette::Srgb,
-    green: palette::Srgb,
-    cyan: palette::Srgb,
-    blue: palette::Srgb,
-    purple: palette::Srgb,
-    brown: palette::Srgb,
+    black: String,
+    light_black: String,
+    dark_gray: String,
+    gray: String,
+    faint_gray: String,
+    light_gray: String,
+    dark_white: String,
+    white: String,
+    red: String,
+    orange: String,
+    yellow: String,
+    green: String,
+    cyan: String,
+    blue: String,
+    purple: String,
+    brown: String,
+}
+
+impl ColorSchemeInput {
+    fn parse(self) -> ColorScheme {
+        ColorScheme {
+            black: self.black.strip_prefix("#").unwrap().to_string(),
+            light_black: self.light_black.strip_prefix("#").unwrap().to_string(),
+            dark_gray: self.dark_gray.strip_prefix("#").unwrap().to_string(),
+            gray: self.gray.strip_prefix("#").unwrap().to_string(),
+            faint_gray: self.faint_gray.strip_prefix("#").unwrap().to_string(),
+            light_gray: self.light_gray.strip_prefix("#").unwrap().to_string(),
+            dark_white: self.dark_white.strip_prefix("#").unwrap().to_string(),
+            white: self.white.strip_prefix("#").unwrap().to_string(),
+            red: self.red.strip_prefix("#").unwrap().to_string(),
+            orange: self.orange.strip_prefix("#").unwrap().to_string(),
+            yellow: self.yellow.strip_prefix("#").unwrap().to_string(),
+            green: self.green.strip_prefix("#").unwrap().to_string(),
+            cyan: self.cyan.strip_prefix("#").unwrap().to_string(),
+            blue: self.blue.strip_prefix("#").unwrap().to_string(),
+            purple: self.purple.strip_prefix("#").unwrap().to_string(),
+            brown: self.brown.strip_prefix("#").unwrap().to_string(),
+        }
+    }
 }
 
 enum Color {
@@ -85,24 +133,10 @@ impl Color {
 fn main() {
     let args = Args::parse();
 
-    let scheme = ColorScheme {
-        black: palette::Srgb::new(0.11, 0.17, 0.20),
-        light_black: palette::Srgb::new(0.20, 0.24, 0.27),
-        dark_gray: palette::Srgb::new(0.31, 0.36, 0.40),
-        gray: palette::Srgb::new(0.40, 0.45, 0.49),
-        faint_gray: palette::Srgb::new(0.65, 0.68, 0.73),
-        light_gray: palette::Srgb::new(0.75, 0.77, 0.81),
-        dark_white: palette::Srgb::new(0.80, 0.83, 0.87),
-        white: palette::Srgb::new(0.85, 0.87, 0.91),
-        red: palette::Srgb::new(0.86, 0.41, 0.42),
-        orange: palette::Srgb::new(0.98, 0.57, 0.34),
-        yellow: palette::Srgb::new(0.95, 0.79, 0.45),
-        green: palette::Srgb::new(0.64, 0.78, 0.60),
-        cyan: palette::Srgb::new(0.45, 0.69, 0.70),
-        blue: palette::Srgb::new(0.44, 0.60, 0.78),
-        purple: palette::Srgb::new(0.77, 0.58, 0.77),
-        brown: palette::Srgb::new(0.67, 0.47, 0.40),
-    };
+    let scheme_file = fs::read_to_string(args.scheme).unwrap();
+    let scheme = serde_json::from_str::<ColorSchemeInput>(&scheme_file)
+        .expect("JSON was not well-formatted")
+        .parse();
 
     let files = template_files(args.path);
 
@@ -111,49 +145,27 @@ fn main() {
             ColorType::Hex => {
                 let content = file
                     .content
-                    .replace(&Color::Black.to_scheme_token(), &to_hex(scheme.black))
-                    .replace(
-                        &Color::LightBlack.to_scheme_token(),
-                        &to_hex(scheme.light_black),
-                    )
-                    .replace(
-                        &Color::DarkGray.to_scheme_token(),
-                        &to_hex(scheme.dark_gray),
-                    )
-                    .replace(&Color::Gray.to_scheme_token(), &to_hex(scheme.gray))
-                    .replace(
-                        &Color::FaintGray.to_scheme_token(),
-                        &to_hex(scheme.faint_gray),
-                    )
-                    .replace(
-                        &Color::LightGray.to_scheme_token(),
-                        &to_hex(scheme.light_gray),
-                    )
-                    .replace(
-                        &Color::DarkWhite.to_scheme_token(),
-                        &to_hex(scheme.dark_white),
-                    )
-                    .replace(&Color::White.to_scheme_token(), &to_hex(scheme.white))
-                    .replace(&Color::Red.to_scheme_token(), &to_hex(scheme.red))
-                    .replace(&Color::Orange.to_scheme_token(), &to_hex(scheme.orange))
-                    .replace(&Color::Yellow.to_scheme_token(), &to_hex(scheme.yellow))
-                    .replace(&Color::Green.to_scheme_token(), &to_hex(scheme.green))
-                    .replace(&Color::Cyan.to_scheme_token(), &to_hex(scheme.cyan))
-                    .replace(&Color::Blue.to_scheme_token(), &to_hex(scheme.blue))
-                    .replace(&Color::Purple.to_scheme_token(), &to_hex(scheme.purple))
-                    .replace(&Color::Brown.to_scheme_token(), &to_hex(scheme.brown));
+                    .replace(&Color::Black.to_scheme_token(), &scheme.black)
+                    .replace(&Color::LightBlack.to_scheme_token(), &scheme.light_black)
+                    .replace(&Color::DarkGray.to_scheme_token(), &scheme.dark_gray)
+                    .replace(&Color::Gray.to_scheme_token(), &scheme.gray)
+                    .replace(&Color::FaintGray.to_scheme_token(), &scheme.faint_gray)
+                    .replace(&Color::LightGray.to_scheme_token(), &scheme.light_gray)
+                    .replace(&Color::DarkWhite.to_scheme_token(), &scheme.dark_white)
+                    .replace(&Color::White.to_scheme_token(), &scheme.white)
+                    .replace(&Color::Red.to_scheme_token(), &scheme.red)
+                    .replace(&Color::Orange.to_scheme_token(), &scheme.orange)
+                    .replace(&Color::Yellow.to_scheme_token(), &scheme.yellow)
+                    .replace(&Color::Green.to_scheme_token(), &scheme.green)
+                    .replace(&Color::Cyan.to_scheme_token(), &scheme.cyan)
+                    .replace(&Color::Blue.to_scheme_token(), &scheme.blue)
+                    .replace(&Color::Purple.to_scheme_token(), &scheme.purple)
+                    .replace(&Color::Brown.to_scheme_token(), &scheme.brown);
 
                 fs::write(file.path, content).unwrap();
             }
         };
     }
-}
-
-fn to_hex(color: palette::Srgb<f32>) -> String {
-    let r = (color.red * 255.0).round() as u8;
-    let g = (color.green * 255.0).round() as u8;
-    let b = (color.blue * 255.0).round() as u8;
-    format!("{:02X}{:02X}{:02X}", r, g, b)
 }
 
 fn template_files(path: String) -> Vec<ColorSchemeFile> {
