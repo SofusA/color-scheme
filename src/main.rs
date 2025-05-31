@@ -63,12 +63,12 @@ impl Color {
     fn to_scheme_token(&self) -> String {
         match self {
             Color::Black => "$black".to_string(),
-            Color::LightBlack => "$light_black".to_string(),
-            Color::DarkGray => "$dark_gray".to_string(),
+            Color::LightBlack => "$light-black".to_string(),
+            Color::DarkGray => "$dark-gray".to_string(),
             Color::Gray => "$gray".to_string(),
-            Color::FaintGray => "$faint_gray".to_string(),
-            Color::LightGray => "$light_gray".to_string(),
-            Color::DarkWhite => "$dark_white".to_string(),
+            Color::FaintGray => "$faint-gray".to_string(),
+            Color::LightGray => "$light-gray".to_string(),
+            Color::DarkWhite => "$dark-white".to_string(),
             Color::White => "$white".to_string(),
             Color::Red => "$red".to_string(),
             Color::Orange => "$orange".to_string(),
@@ -153,7 +153,7 @@ fn to_hex(color: palette::Srgb<f32>) -> String {
     let r = (color.red * 255.0).round() as u8;
     let g = (color.green * 255.0).round() as u8;
     let b = (color.blue * 255.0).round() as u8;
-    format!("#{:02X}{:02X}{:02X}", r, g, b)
+    format!("{:02X}{:02X}{:02X}", r, g, b)
 }
 
 fn template_files(path: String) -> Vec<ColorSchemeFile> {
