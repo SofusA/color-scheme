@@ -2,7 +2,12 @@
 
 Simple color configuration for configuration files.
 
-Currently only supports hex style colors. Feel free to submit an issue if you would be interested.
+Currently supports the following style colors. Feel free to submit an issue if you would be interested.
+
+```
+hex: #rrggbb  
+rrggbb: rrggbbaa
+```
 
 ## Usage
 Create a file next to you config file, with the extension: `{color-type}.cscheme`, with tokens instead of colors. E.g. for `alacritty.toml`:
@@ -10,8 +15,8 @@ Create a file next to you config file, with the extension: `{color-type}.cscheme
 ```toml
 # alacritty.toml.hex.cscheme
 [colors.primary]
-background = '#$black'
-foreground = '#$light-gray'
+background = '$black'
+foreground = '$light-gray'
 ```
 
 This will generate:
@@ -23,8 +28,10 @@ foreground = '#c0c5ce'
 ```
 
 It requires path so your configuration directory, usually `.config` and path to a color scheme file in the following format:
+
 ```json
 {
+  "font-family": "JetBrainsMono NL",
   "black": "#1b2b34",
   "light-black": "#343d46",
   "dark-gray": "#4f5b66",

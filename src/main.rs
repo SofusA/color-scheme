@@ -15,8 +15,10 @@ struct Args {
     scheme: String,
 }
 
+#[derive(Debug, Clone, Copy)]
 enum ColorType {
     Hex,
+    Rrggbbaa,
 }
 
 struct ColorSchemeFile {
@@ -28,6 +30,7 @@ struct ColorSchemeFile {
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 struct ColorSchemeInput {
+    font_family: String,
     black: String,
     light_black: String,
     dark_gray: String,
@@ -46,49 +49,54 @@ struct ColorSchemeInput {
     brown: String,
 }
 
+struct Color(String);
+
 struct ColorScheme {
-    black: String,
-    light_black: String,
-    dark_gray: String,
-    gray: String,
-    faint_gray: String,
-    light_gray: String,
-    dark_white: String,
-    white: String,
-    red: String,
-    orange: String,
-    yellow: String,
-    green: String,
-    cyan: String,
-    blue: String,
-    purple: String,
-    brown: String,
+    font_family: String,
+    black: Color,
+    light_black: Color,
+    dark_gray: Color,
+    gray: Color,
+    faint_gray: Color,
+    light_gray: Color,
+    dark_white: Color,
+    white: Color,
+    red: Color,
+    orange: Color,
+    yellow: Color,
+    green: Color,
+    cyan: Color,
+    blue: Color,
+    purple: Color,
+    brown: Color,
 }
 
 impl ColorSchemeInput {
     fn parse(self) -> ColorScheme {
         ColorScheme {
-            black: self.black.strip_prefix("#").unwrap().to_string(),
-            light_black: self.light_black.strip_prefix("#").unwrap().to_string(),
-            dark_gray: self.dark_gray.strip_prefix("#").unwrap().to_string(),
-            gray: self.gray.strip_prefix("#").unwrap().to_string(),
-            faint_gray: self.faint_gray.strip_prefix("#").unwrap().to_string(),
-            light_gray: self.light_gray.strip_prefix("#").unwrap().to_string(),
-            dark_white: self.dark_white.strip_prefix("#").unwrap().to_string(),
-            white: self.white.strip_prefix("#").unwrap().to_string(),
-            red: self.red.strip_prefix("#").unwrap().to_string(),
-            orange: self.orange.strip_prefix("#").unwrap().to_string(),
-            yellow: self.yellow.strip_prefix("#").unwrap().to_string(),
-            green: self.green.strip_prefix("#").unwrap().to_string(),
-            cyan: self.cyan.strip_prefix("#").unwrap().to_string(),
-            blue: self.blue.strip_prefix("#").unwrap().to_string(),
-            purple: self.purple.strip_prefix("#").unwrap().to_string(),
-            brown: self.brown.strip_prefix("#").unwrap().to_string(),
+            font_family: self.font_family,
+            black: Color(self.black),
+            light_black: Color(self.light_black),
+            dark_gray: Color(self.dark_gray),
+            gray: Color(self.gray),
+            faint_gray: Color(self.faint_gray),
+            light_gray: Color(self.light_gray),
+            dark_white: Color(self.dark_white),
+            white: Color(self.white),
+            red: Color(self.red),
+            orange: Color(self.orange),
+            yellow: Color(self.yellow),
+            green: Color(self.green),
+            cyan: Color(self.cyan),
+            blue: Color(self.blue),
+            purple: Color(self.purple),
+            brown: Color(self.brown),
         }
     }
 }
 
-enum Color {
+enum ColorToken {
+    FontFamily,
     Black,
     LightBlack,
     DarkGray,
@@ -107,25 +115,26 @@ enum Color {
     Brown,
 }
 
-impl Color {
+impl ColorToken {
     fn to_scheme_token(&self) -> String {
         match self {
-            Color::Black => "$black".to_string(),
-            Color::LightBlack => "$light-black".to_string(),
-            Color::DarkGray => "$dark-gray".to_string(),
-            Color::Gray => "$gray".to_string(),
-            Color::FaintGray => "$faint-gray".to_string(),
-            Color::LightGray => "$light-gray".to_string(),
-            Color::DarkWhite => "$dark-white".to_string(),
-            Color::White => "$white".to_string(),
-            Color::Red => "$red".to_string(),
-            Color::Orange => "$orange".to_string(),
-            Color::Yellow => "$yellow".to_string(),
-            Color::Green => "$green".to_string(),
-            Color::Cyan => "$cyan".to_string(),
-            Color::Blue => "$blue".to_string(),
-            Color::Purple => "$purple".to_string(),
-            Color::Brown => "$brown".to_string(),
+            ColorToken::FontFamily => "$font-family".to_string(),
+            ColorToken::Black => "$black".to_string(),
+            ColorToken::LightBlack => "$light-black".to_string(),
+            ColorToken::DarkGray => "$dark-gray".to_string(),
+            ColorToken::Gray => "$gray".to_string(),
+            ColorToken::FaintGray => "$faint-gray".to_string(),
+            ColorToken::LightGray => "$light-gray".to_string(),
+            ColorToken::DarkWhite => "$dark-white".to_string(),
+            ColorToken::White => "$white".to_string(),
+            ColorToken::Red => "$red".to_string(),
+            ColorToken::Orange => "$orange".to_string(),
+            ColorToken::Yellow => "$yellow".to_string(),
+            ColorToken::Green => "$green".to_string(),
+            ColorToken::Cyan => "$cyan".to_string(),
+            ColorToken::Blue => "$blue".to_string(),
+            ColorToken::Purple => "$purple".to_string(),
+            ColorToken::Brown => "$brown".to_string(),
         }
     }
 }
@@ -141,30 +150,85 @@ fn main() {
     let files = template_files(args.path);
 
     for file in files {
-        match file.color_type {
-            ColorType::Hex => {
-                let content = file
-                    .content
-                    .replace(&Color::Black.to_scheme_token(), &scheme.black)
-                    .replace(&Color::LightBlack.to_scheme_token(), &scheme.light_black)
-                    .replace(&Color::DarkGray.to_scheme_token(), &scheme.dark_gray)
-                    .replace(&Color::Gray.to_scheme_token(), &scheme.gray)
-                    .replace(&Color::FaintGray.to_scheme_token(), &scheme.faint_gray)
-                    .replace(&Color::LightGray.to_scheme_token(), &scheme.light_gray)
-                    .replace(&Color::DarkWhite.to_scheme_token(), &scheme.dark_white)
-                    .replace(&Color::White.to_scheme_token(), &scheme.white)
-                    .replace(&Color::Red.to_scheme_token(), &scheme.red)
-                    .replace(&Color::Orange.to_scheme_token(), &scheme.orange)
-                    .replace(&Color::Yellow.to_scheme_token(), &scheme.yellow)
-                    .replace(&Color::Green.to_scheme_token(), &scheme.green)
-                    .replace(&Color::Cyan.to_scheme_token(), &scheme.cyan)
-                    .replace(&Color::Blue.to_scheme_token(), &scheme.blue)
-                    .replace(&Color::Purple.to_scheme_token(), &scheme.purple)
-                    .replace(&Color::Brown.to_scheme_token(), &scheme.brown);
+        let content = file
+            .content
+            .replace(
+                &ColorToken::FontFamily.to_scheme_token(),
+                &scheme.font_family,
+            )
+            .replace(
+                &ColorToken::Black.to_scheme_token(),
+                &to_color_code(&scheme.black, file.color_type),
+            )
+            .replace(
+                &ColorToken::LightBlack.to_scheme_token(),
+                &to_color_code(&scheme.light_black, file.color_type),
+            )
+            .replace(
+                &ColorToken::DarkGray.to_scheme_token(),
+                &to_color_code(&scheme.dark_gray, file.color_type),
+            )
+            .replace(
+                &ColorToken::Gray.to_scheme_token(),
+                &to_color_code(&scheme.gray, file.color_type),
+            )
+            .replace(
+                &ColorToken::FaintGray.to_scheme_token(),
+                &to_color_code(&scheme.faint_gray, file.color_type),
+            )
+            .replace(
+                &ColorToken::LightGray.to_scheme_token(),
+                &to_color_code(&scheme.light_gray, file.color_type),
+            )
+            .replace(
+                &ColorToken::DarkWhite.to_scheme_token(),
+                &to_color_code(&scheme.dark_white, file.color_type),
+            )
+            .replace(
+                &ColorToken::White.to_scheme_token(),
+                &to_color_code(&scheme.white, file.color_type),
+            )
+            .replace(
+                &ColorToken::Red.to_scheme_token(),
+                &to_color_code(&scheme.red, file.color_type),
+            )
+            .replace(
+                &ColorToken::Orange.to_scheme_token(),
+                &to_color_code(&scheme.orange, file.color_type),
+            )
+            .replace(
+                &ColorToken::Yellow.to_scheme_token(),
+                &to_color_code(&scheme.yellow, file.color_type),
+            )
+            .replace(
+                &ColorToken::Green.to_scheme_token(),
+                &to_color_code(&scheme.green, file.color_type),
+            )
+            .replace(
+                &ColorToken::Cyan.to_scheme_token(),
+                &to_color_code(&scheme.cyan, file.color_type),
+            )
+            .replace(
+                &ColorToken::Blue.to_scheme_token(),
+                &to_color_code(&scheme.blue, file.color_type),
+            )
+            .replace(
+                &ColorToken::Purple.to_scheme_token(),
+                &to_color_code(&scheme.purple, file.color_type),
+            )
+            .replace(
+                &ColorToken::Brown.to_scheme_token(),
+                &to_color_code(&scheme.brown, file.color_type),
+            );
 
-                fs::write(file.path, content).unwrap();
-            }
-        };
+        fs::write(file.path, content).unwrap();
+    }
+}
+
+fn to_color_code(color_hex: &Color, color_type: ColorType) -> String {
+    match color_type {
+        ColorType::Hex => color_hex.0.clone(),
+        ColorType::Rrggbbaa => format!("{}ff", color_hex.0.strip_prefix("#").unwrap()),
     }
 }
 
@@ -183,6 +247,7 @@ fn template_files(path: String) -> Vec<ColorSchemeFile> {
 
             let color_type = match type_string {
                 "hex" => ColorType::Hex,
+                "rrggbbaa" => ColorType::Rrggbbaa,
                 _ => panic!("Missing color type"),
             };
 
